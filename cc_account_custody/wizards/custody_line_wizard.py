@@ -1,5 +1,4 @@
 from odoo import fields, api, models
-from odoo.addons import decimal_precision as dp
 from functools import wraps
 
 def check_return(method):
@@ -35,7 +34,7 @@ class EmployeeLoan(models.TransientModel):
         context = dict(self._context or {})
         active_id = context.get('active_id', [])
         custody_id = self.env['account.custody'].browse(active_id)
-        return custody_id.move_id.journal_id.default_credit_account_id
+        return getattr(custody_id.move_id.journal_id, 'default_account_id', False) or getattr(custody_id.move_id.journal_id, 'default_credit_account_id', False)
 
     @check_return
     def default_amount(self):
@@ -55,7 +54,7 @@ class EmployeeLoan(models.TransientModel):
     name = fields.Char('Description', default=default_name, required=True)
     product_id = fields.Many2one('product.product', string='Product')
 
-    amount = fields.Monetary('Amount', currency_field='currency_id', digits=dp.get_precision('Account'), default=default_amount, required=True)
+    amount = fields.Monetary('Amount', currency_field='currency_id', default=default_amount, required=True)
     date = fields.Date('Date', required=True)
     # journal_id = fields.Many2one('account.journal', 'Journal', required=False, default=default_journal)
     # account_id = fields.Many2one('account.account', 'Account', required=False, default=default_account)

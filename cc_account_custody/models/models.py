@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from odoo import models, fields, api, _
-from odoo.addons import decimal_precision as dp
 from odoo.exceptions import UserError, ValidationError
 from odoo.exceptions import AccessError
 
@@ -25,66 +24,42 @@ class Custody(models.Model):
     name = fields.Char('Custody Reference', readonly=True, default=_('New'))
 
     description = fields.Char('Description', required=True,
-                              states={'posted': [('readonly', True)],
-                                      'w_clear': [('readonly', True)], 'approve': [('readonly', True)],
-                                      'post2': [('readonly', True)], 'cleared': [('readonly', True)]},
-                              track_visibility='onchange')
+                              tracking=True)
 
-    amount = fields.Monetary('Amount', currency_field='currency_id', digits=dp.get_precision('Account'),
+    amount = fields.Monetary('Amount', currency_field='currency_id',
                              required=True,
-                             states={'posted': [('readonly', True)], 'w_clear': [('readonly', True)],
-                                     'approve': [('readonly', True)],
-                                     'post2': [('readonly', True)], 'cleared': [('readonly', True)]},
-                             track_visibility='onchange')
+                             tracking=True)
 
     date = fields.Date('Date', required=True, default=fields.Date.context_today,
-                       states={'posted': [('readonly', True)],
-                               'w_clear': [('readonly', True)], 'approve': [('readonly', True)],
-                               'post2': [('readonly', True)], 'cleared': [('readonly', True)]},
-                       track_visibility='onchange')
+                       tracking=True)
 
     employee_id = fields.Many2one('hr.employee', required=True,
-                                  states={'posted': [('readonly', True)], 'w_clear': [('readonly', True)],
-                                          'approve': [('readonly', True)], 'post2': [('readonly', True)],
-                                          'cleared': [('readonly', True)]}, track_visibility='onchange')
+tracking=True)
 
     journal_id = fields.Many2one('account.journal', 'Journal',
                                  domain=['|', ('type', '=', 'cash'), ('type', '=', 'bank')],
-                                 states={'posted': [('readonly', True)], 'w_clear': [('readonly', True)],
-                                         'approve': [('readonly', True)], 'post2': [('readonly', True)],
-                                         'cleared': [('readonly', True)]}, track_visibility='onchange')
+tracking=True)
 
     account_id = fields.Many2one('account.account', 'Account',
-                                 states={'posted': [('readonly', True)], 'w_clear': [('readonly', True)],
-                                         'approve': [('readonly', True)], 'post2': [('readonly', True)],
-                                         'cleared': [('readonly', True)]}, track_visibility='onchange')
+tracking=True)
 
     pay_date = fields.Date('Payment Date', default=fields.Date.context_today,
-                           states={'posted': [('readonly', True)], 'w_clear': [('readonly', True)],
-                                   'approve': [('readonly', True)], 'post2': [('readonly', True)],
-                                   'cleared': [('readonly', True)]}, track_visibility='onchange')
+tracking=True)
 
     analytic_account_id = fields.Many2one('account.analytic.account', 'Analytic Account',
-                                          states={'posted': [('readonly', True)], 'w_clear': [('readonly', True)],
-                                                  'approve': [('readonly', True)], 'post2': [('readonly', True)],
-                                                  'cleared': [('readonly', True)]}, track_visibility='onchange')
+tracking=True)
 
     cus_journal_id = fields.Many2one('account.journal', 'Custody Journal', domain=[('type', '=', 'general')],
-                                     states={'post2': [('readonly', True)], 'cleared': [('readonly', True)]},
-                                     track_visibility='onchange')
+                                                                          tracking=True)
 
     move_id = fields.Many2one('account.move', 'Accounting Entry', readonly=True, copy=False)
 
     company_id = fields.Many2one('res.company', string='Company', readonly=True,
-                                 states={'draft': [('readonly', False)], 'refused': [('readonly', False)]},
-                                 default=lambda self: self.env.user.company_id)
+                                                                  default=lambda self: self.env.user.company_id)
     currency_id = fields.Many2one('res.currency', string='Currency', readonly=True,
-                                  states={'draft': [('readonly', False)], 'refused': [('readonly', False)]},
-                                  default=lambda self: self.env.user.company_id.currency_id)
+                                                                    default=lambda self: self.env.user.company_id.currency_id)
     line_ids = fields.One2many('account.custody.line', 'custody_id', 'Custody Lines',
-                               states={'draft': [('readonly', True)], 'submit': [('readonly', True)],
-                                       'posted': [('readonly', True)], 'post2': [('readonly', True)],
-                                       'cleared': [('readonly', True)]})
+)
 
     balance = fields.Monetary('Balance', currency_field='currency_id', compute=_compute_balance, store=True)
 
@@ -96,7 +71,7 @@ class Custody(models.Model):
         ('approve', 'Approve'),
         ('post2', 'Post'),
         ('cleared', 'Cleared'),  # Change The Name And Tech But Function Name Not Changed
-    ], default='draft', track_visibility='onchange')
+    ], default='draft', tracking=True)
 
     def action_submit(self):
         # access_rights_check('hr_payroll.group_hr_payroll_manager', self)
@@ -199,7 +174,7 @@ class Custody(models.Model):
             })
 
             r.write({'move_id': move.id, 'state': 'posted'})
-            move.post()
+            move.action_post()
 
     def action_wait(self):
         self.write({'state': 'w_clear'})
@@ -268,7 +243,7 @@ class Custody(models.Model):
             move_dict['line_ids'] = line_ids
             move = self.env['account.move'].create(move_dict)
             r.write({'move_id': move.id, 'state': 'post2'})
-            move.post()
+            move.action_post()
 
 
 class CustodyLine(models.Model):
@@ -282,7 +257,7 @@ class CustodyLine(models.Model):
 
     product_id = fields.Many2one('product.product', string='Product')
 
-    amount = fields.Monetary('Amount', currency_field='currency_id', digits=dp.get_precision('Account'))
+    amount = fields.Monetary('Amount', currency_field='currency_id')
 
     date = fields.Date('Date')
 
@@ -321,3 +296,8 @@ class CustodyLine(models.Model):
     def onchange_product_id(self):
         for rec in self:
             rec.account_id = rec.product_id.property_account_expense_id
+
+    @api.depends('state')
+    def _compute_can_reset(self):
+        for rec in self:
+            rec.can_reset = (rec.state not in ['cleared', 'post2'])

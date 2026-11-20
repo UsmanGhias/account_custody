@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <report
-            id="custody_report_id"
-            model="account.custody"
-            string="Custody Detail"
-            report_type="qweb-pdf"
-            name="account_custody.doc_custody_detail_report"
-
-    />
+    <record id="custody_report_id" model="ir.actions.report">
+        <field name="name">Custody Detail</field>
+        <field name="model">account.custody</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">cc_account_custody.doc_custody_detail_report</field>
+        <field name="report_file">cc_account_custody.doc_custody_detail_report</field>
+        <field name="binding_model_id" ref="model_account_custody"/>
+        <field name="binding_type">report</field>
+    </record>
 
     <template id="custody_detail_report">
 <!--        <t t-set="data_report_margin_top" t-value="30"/>-->
@@ -116,7 +117,7 @@
     <template id="doc_custody_detail_report">
         <t t-call="web.html_container">
             <t t-foreach="docs" t-as="o">
-                <t t-call="account_custody.custody_detail_report" t-att-data-oe-lang="o and o.env.context.get('lang')"/>
+                <t t-call="cc_account_custody.custody_detail_report" t-att-data-oe-lang="o and o.env.context.get('lang')"/>
             </t>
         </t>
     </template>

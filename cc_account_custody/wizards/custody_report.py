@@ -1,5 +1,5 @@
 from datetime import datetime
-from odoo.tools import UserError
+from odoo.exceptions import UserError
 from odoo.tools import DEFAULT_SERVER_DATE_FORMAT as DATE_FORMAT
 
 from odoo import models, fields, api
@@ -24,11 +24,11 @@ class custodyViewReportWizard(models.TransientModel):
             'form': self.read()[0]
         }
 
-        return self.env.ref('account_custody.action_custom_report_custody').report_action(self, data=data)
+        return self.env.ref('cc_account_custody.action_custom_report_custody').report_action(self, data=data)
 
 
 class ReportCompanyView(models.AbstractModel):
-    _name = 'report.account_custody.report_custody_view'
+    _name = 'report.cc_account_custody.report_custody_view'
 
     @api.model
     def _get_report_values(self, docids, data=None):

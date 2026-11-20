@@ -96,15 +96,15 @@
             </t>
         </t>
     </template>
-    <report
-            id="action_custom_report_custody"
-            model="report.account_custody.report_custody_view "
-            string="Custody Report"
-            menu="False"
-            report_type="qweb-pdf"
-            name="account_custody.report_custody_view"
-            file="account_custody.report_custody_view"
-    />
+    <record id="action_custom_report_custody" model="ir.actions.report">
+        <field name="name">Custody Report</field>
+        <field name="model">account.custody</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">cc_account_custody.report_custody_view</field>
+        <field name="report_file">cc_account_custody.report_custody_view</field>
+        <field name="binding_model_id" eval="False"/>
+        <field name="binding_type">report</field>
+    </record>
 </odoo>
 
 
