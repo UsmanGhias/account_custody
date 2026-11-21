@@ -14,10 +14,10 @@ Streamline employee cash custody, disbursements, petty cash advances, and settle
 - Multi-company and multi-currency support
     """,
     'author': "CODCrafters, Usman Ghias",
-    'website': "https://usmanghias.co.uk",
+    'website': 'https://usmanghias.co.uk',
     'support': "support@codcrafters.org",
     'category': 'Accounting/Finance',
-    'version': '17.0.1.0.0',
+    'version': '18.0.1.0.0',
     'license': 'OPL-1',
     'price': 29.0,
     'currency': 'EUR',
